@@ -19,6 +19,13 @@ ENV ALPHACLAW_ROOT_DIR=/data
 # entry expects — a plain install doesn't produce that binary) and patch
 # the id in before installing from the local, already-fixed copy so
 # OpenClaw's manifest validation passes.
+#
+# --dangerously-force-unsafe-install: OpenClaw's dangerous-code scanner
+# flags gbrain's use of `new RegExp(...)` (src/core/takes-fence.ts, a
+# regex built from a string constant to parse "takes" tables) as dynamic
+# code execution. Reviewed the source: no eval/new Function/vm.*/dynamic
+# require-import/child_process anywhere in the file. Treating this as a
+# scanner false positive on RegExp construction, not real dangerous code.
 ENV BUN_INSTALL="/opt/bun"
 ENV PATH="$BUN_INSTALL/bin:$PATH"
 RUN curl -fsSL https://bun.sh/install | bash \
@@ -33,7 +40,7 @@ RUN curl -fsSL https://bun.sh/install | bash \
          if (!j.id) j.id = "gbrain"; \
          fs.writeFileSync(p, JSON.stringify(j, null, 2) + "\n"); \
        ' \
-    && openclaw plugins install /opt/gbrain --link
+    && openclaw plugins install /opt/gbrain --link --dangerously-force-unsafe-install
 
 RUN mkdir -p /data
 
